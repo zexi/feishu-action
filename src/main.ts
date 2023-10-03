@@ -57,6 +57,9 @@ async function postIssueMessage(
 
   const new_msg_type = "interactive" as MsgType
 
+  core.debug("body is: " + body)
+  console.log("=== body is: " + body)
+
   return await post({
     msg_type: new_msg_type,
     card: {
@@ -69,11 +72,8 @@ async function postIssueMessage(
       },
       elements: [
         {
-          tag: "div",
-          text: {
-            tag: "lark_md",
-            content: JSON.parse(body),
-          }
+          tag: "markdown",
+          content: body,
         }
       ]
     }
@@ -117,6 +117,7 @@ async function post(body: Message | InteractiveMessage): Promise<string> {
 }
 
 async function run(): Promise<void> {
+  core.setCommandEcho(true)
   try {
     await postMessage()
   } catch (error) {
