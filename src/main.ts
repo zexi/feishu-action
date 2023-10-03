@@ -72,7 +72,7 @@ async function postIssueMessage(
           tag: "div",
           text: {
             tag: "lark_md",
-            content: body,
+            content: JSON.parse(body),
           }
         }
       ]
@@ -84,7 +84,7 @@ async function postMessage(): Promise<string> {
   const msg_type = core.getInput('msg_type') as MsgType
   const content: string = core.getInput('content')
 
-  core.info("get msg_type: " + msg_type)
+  core.debug("get msg_type: " + msg_type)
   switch (msg_type) {
     case MsgType.Text:
     case MsgType.Post:
@@ -103,7 +103,7 @@ async function postMessage(): Promise<string> {
 
 async function post(body: Message | InteractiveMessage): Promise<string> {
   const url: string = core.getInput('url')
-  core.warning("=====post body: " + JSON.stringify(body))
+  core.debug("=====post body: " + JSON.stringify(body))
   const rsp = await got.post(url, {
     headers: {
       'Content-Type': 'application/json'
@@ -111,8 +111,8 @@ async function post(body: Message | InteractiveMessage): Promise<string> {
     body: JSON.stringify(body)
   })
 
-  core.error("======resp")
-  core.info(rsp.body)
+  core.debug("======resp")
+  core.debug(rsp.body)
   return rsp.body
 }
 
