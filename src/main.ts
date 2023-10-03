@@ -8,7 +8,8 @@ enum MsgType {
   Post = 'post',
   Image = 'image',
   ShareChat = 'share_chat',
-  Interactive = 'interactive'
+  Interactive = 'interactive',
+  GithubIssue = 'github_issue'
 }
 
 /** Message */
@@ -39,9 +40,43 @@ async function postInteractiveMessage(
   msg_type: MsgType,
   cardContent: string
 ): Promise<string> {
+  const card = yaml.load(cardContent)
   return await post({
     msg_type,
     card: yaml.load(cardContent)
+  })
+}
+
+async function postIssueMessage(
+  msg_type: MsgType,
+  cardContent: string
+): Promise<string> {
+  const title = core.getInput('issue_title')
+  const body = core.getInput('issue_body')
+  const link_url = core.getInput('issue_link_url')
+
+  const new_msg_type = "interactive" as MsgType
+
+  return await post({
+    msg_type: new_msg_type,
+    card: {
+      header: {
+        title: {
+          content: title,
+          tag: "plain_text"
+        },
+        template: "blue",
+      },
+      elements: [
+        {
+          tag: "div",
+          text: {
+            tag: "lark_md",
+            content: body,
+          }
+        }
+      ]
+    }
   })
 }
 
@@ -49,6 +84,7 @@ async function postMessage(): Promise<string> {
   const msg_type = core.getInput('msg_type') as MsgType
   const content: string = core.getInput('content')
 
+  core.info("get msg_type: " + msg_type)
   switch (msg_type) {
     case MsgType.Text:
     case MsgType.Post:
@@ -57,6 +93,8 @@ async function postMessage(): Promise<string> {
       return await postNormalMessage(msg_type, content)
     case MsgType.Interactive:
       return await postInteractiveMessage(msg_type, content)
+    case MsgType.GithubIssue:
+      return await postIssueMessage(msg_type, content)
     default:
       // fallback
       return await postNormalMessage(msg_type, content)
@@ -65,6 +103,7 @@ async function postMessage(): Promise<string> {
 
 async function post(body: Message | InteractiveMessage): Promise<string> {
   const url: string = core.getInput('url')
+  core.warning("=====post body: " + JSON.stringify(body))
   const rsp = await got.post(url, {
     headers: {
       'Content-Type': 'application/json'
@@ -72,7 +111,8 @@ async function post(body: Message | InteractiveMessage): Promise<string> {
     body: JSON.stringify(body)
   })
 
-  core.debug(rsp.body)
+  core.error("======resp")
+  core.info(rsp.body)
   return rsp.body
 }
 
